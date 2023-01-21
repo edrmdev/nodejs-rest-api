@@ -1,4 +1,6 @@
 const { response, request } = require('express');
+const bcryptjs = require('bcryptjs');
+const Usuario = require( '../models/usuario' );
 
 const usuariosGet = (req = request, res = response) => {
     const {
@@ -7,8 +9,7 @@ const usuariosGet = (req = request, res = response) => {
         apikey,
         page = 1,
         limit = 10
-    } = req.query; // para obtener parametros desde el metodo get se utiliza
-    //la funcion query, en caso de ser un metodo post la solicitud se obtiene mediante un request.body;
+    } = req.query;
 
     res.json({
         msg: 'get API - Controlador',
@@ -18,14 +19,23 @@ const usuariosGet = (req = request, res = response) => {
     });
 }
 
-const usuariosPost = (req, res = response) => {
+const usuariosPost = async (req, res = response) => {
 
-    const { nombre, edad } = req.body;
+
+    const { nombre, correo, password, rol } = req.body;
+    const usuario = new Usuario( { nombre, correo, password, rol } );
+   
+
+    //Encriptar password
+    const salt = bcryptjs.genSaltSync()
+    usuario.password = bcryptjs.hashSync( password, salt );
+
+    //Guardar en BD
+    await usuario.save()
 
     res.json({
         msg: 'post API - Controlador',
-        nombre,
-        edad
+        usuario
     })
 }
 
