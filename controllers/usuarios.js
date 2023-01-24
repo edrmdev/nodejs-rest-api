@@ -1,21 +1,39 @@
 const { response, request } = require('express');
 const bcryptjs = require('bcryptjs');
 const Usuario = require( '../models/usuario' );
+require('colors');
 
-const usuariosGet = (req = request, res = response) => {
-    const {
-        q,
-        nombre = 'No name',
-        apikey,
-        page = 1,
-        limit = 10
-    } = req.query;
+const usuariosGet = async (req = request, res = response) => {
+    const { limite = 10, desde = 0 } = req.query;
+    const query = { estado: true };
+    
+
+    /*
+    const usuarios = await Usuario.find( query )
+        .skip( Number(desde) )
+        .limit( Number(limite) );
+
+    const total = await Usuario.count( query );
+    */
+
+    let myMessage = '';
+    
+    const [ total, usuarios ] = await Promise.all( [
+        Usuario.count(query),
+        Usuario.find( query ).skip( Number(desde) ).limit( Number(limite) )
+    ]);
+
+    
+    if( total > 0 )
+        myMessage = `Se han encontrado un total de ${ total } usuarios`;
+    else 
+        myMessage = `Se han encontrado ${ total } resultados`;
+    
 
     res.json({
-        msg: 'get API - Controlador',
-        q,
-        nombre,
-        apikey
+        msg: 'Lista de usuarios - ' + myMessage,
+        total,
+        usuarios,
     });
 }
 
@@ -27,16 +45,13 @@ const usuariosPost = async (req, res = response) => {
    
 
     //Encriptar password
-    const salt = bcryptjs.genSaltSync()
+    const salt = bcryptjs.genSaltSync();
     usuario.password = bcryptjs.hashSync( password, salt );
 
     //Guardar en BD
-    await usuario.save()
+    await usuario.save();
 
-    res.json({
-        msg: 'post API - Controlador',
-        usuario
-    })
+    res.json(usuario);
 }
 
 const usuariosPut = async (req, res = response) => {
@@ -52,7 +67,7 @@ const usuariosPut = async (req, res = response) => {
     const usuario = await Usuario.findByIdAndUpdate( id, resto );
 
     res.json({
-        msg: 'Put API - Controlador',
+        //msg: 'Put API - Controlador',
         usuario
     })
 }
@@ -64,12 +79,14 @@ const usuariosPatch = (req, res = response) => {
     })
 }
 
-const usuariosDelete = (req, res = response) => {
+const usuariosDelete = async (req, res = response) => {
+    const { id } = req.params;
     const body = req.body;
+    const usuario = await Usuario.findByIdAndUpdate( id, { estado: false });
 
     res.json({
         msg: 'Delete API - Controlador',
-        body
+        usuario
     })
 }
 
