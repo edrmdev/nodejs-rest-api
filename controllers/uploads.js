@@ -1,6 +1,5 @@
 const path = require('path');
 const fs = require('fs');
-
 const cloudinary  = require('cloudinary').v2;
 cloudinary.config( process.env.CLOUDINARY_URL );
 const { response } = require("express");
@@ -92,20 +91,22 @@ const actualizarImagenCloudinary = async ( req, res = reponse ) => {
                 return res.status( 500 ).json({ msg: 'Opción no valida'});
         }
 
-        //limpiar imágenes previas
         if( modelo.img ){
-            await cloudinary.uploader.destroy( modelo.img );
+            const nombreArr = modelo.img.split('/');
+            const nombre    = nombreArr[ nombreArr.length - 1 ];
+            const [ public_id ] = nombre.split('.');
+
+            await cloudinary.uploader.destroy( public_id );
         }
 
         const { tempFilePath } = req.files.archivo;
-        const { public_id, secure_url } = await cloudinary.uploader.upload( tempFilePath );
+        const { secure_url } = await cloudinary.uploader.upload( tempFilePath );
 
-        modelo.img = public_id;
+        modelo.img = secure_url;
         await modelo.save();
     
         res.status(200).json({
-            secure_url,
-            modelo,
+            modelo
         })
     }
     catch(msg){
@@ -118,7 +119,6 @@ const mostrarImagen = async (req, res = response) => {
 
     try{
         let modelo;
-
         switch( coleccion ){
             case 'usuarios':
                 modelo = await Usuario.findById(id);
@@ -133,15 +133,16 @@ const mostrarImagen = async (req, res = response) => {
         
         if( modelo.img ){
             const imagePath = path.join( __dirname, '../uploads', coleccion, modelo.img);
+
             if( fs.existsSync(imagePath) ){
-            
-                console.log(imagePath);
                 res.sendFile( imagePath );
             }
+            
+            res.json({ ImgUrl: modelo.img } )
         }
         else{
             const imageNotFoundPath = path.join( __dirname, '../assets/imagenotfound.png');
-            res.sendFile( imageNotFoundPath );
+            return res.sendFile( imageNotFoundPath );
         }
     }
     catch(msg){
