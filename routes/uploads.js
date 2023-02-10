@@ -6,10 +6,10 @@ const { coleccionesPermitidas } = require('../helpers/db-validators');
 
 const router = new Router();
 
-router.post( '/', validarSubirArchivo,cargarArchivo );
+router.post( '/', validarSubirArchivo, cargarArchivo );
 
 router.put( '/:coleccion/:id', [
-  validarSubirArchivo, 
+  validarSubirArchivo,
   check( 'id', 'El id debe ser de mongo').isMongoId(),
   check( 'coleccion' ).custom( c => coleccionesPermitidas( c, ['usuarios', 'productos'])),
   validarCampos
