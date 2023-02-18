@@ -4,7 +4,7 @@
   "description": "",
   "main": "app.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "node --inspect ./node_modules/jest/bin/jest.js --runInBand",
     "start": "node app.js"
   },
   "keywords": [],
@@ -23,5 +23,9 @@
     "jsonwebtoken": "^9.0.0",
     "mongoose": "^6.9.0",
     "uuid": "^9.0.0"
+  },
+  "devDependencies": {
+    "jest": "^29.4.3",
+    "supertest": "^6.3.3"
   }
 }
